@@ -27,7 +27,7 @@
             cuda.libcublas
             cuda.nccl
           ];
-          basePackages = pythonDeps ++ cudaLibs ++ [
+          basePackages = [ python ] ++ pythonDeps ++ cudaLibs ++ [
             pkgs.git
             pkgs.which
             pkgs.stdenv.cc.cc
