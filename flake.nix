@@ -15,19 +15,27 @@
           };
           cuda = pkgs.cudaPackages;
           python = pkgs.python311;
-          pythonDeps = with python.pkgs; [
-            pip
-            setuptools
-            wheel
-            virtualenv
-          ];
+          pythonEnv = python.withPackages (ps: with ps; [
+            # CUDA-enabled PyTorch wheels and friends
+            pytorch-bin
+            torchvision-bin
+            einops
+            transformers
+            safetensors
+            fire
+            openai
+            huggingface-hub
+            requests
+            bitsandbytes
+            diffusers
+          ]);
           cudaLibs = [
             cuda.cudatoolkit
             cuda.cudnn
             cuda.libcublas
             cuda.nccl
           ];
-          basePackages = [ python ] ++ pythonDeps ++ cudaLibs ++ [
+          basePackages = [ pythonEnv ] ++ cudaLibs ++ [
             pkgs.git
             pkgs.which
             pkgs.stdenv.cc.cc
@@ -43,60 +51,24 @@
             PYTORCH_CUDA_ALLOC_CONF = "expandable_segments:True";
             HF_HUB_ENABLE_HF_TRANSFER = "1";
           };
-          setupVenv = ''
-            if [ -w . ]; then
-              VENV="''${FLUX2_VENV:-.venv}"
-            else
-              VENV="''${FLUX2_VENV:-$HOME/.cache/flux2-venv}"
-            fi
-            mkdir -p "$(dirname "$VENV")"
-            if [ ! -d "$VENV" ]; then
-              echo "Creating python venv in $VENV"
-              python -m venv "$VENV"
-            fi
-
-            # shellcheck disable=SC1090,SC1091
-            source "$VENV/bin/activate"
-
-            # Install python deps once. Torch/torchvision pulled from official CUDA wheels.
-            if [ ! -f "$VENV/.deps-installed" ]; then
-              echo "Installing python deps (torch/cu124, diffusers main, 4-bit stack)..."
-              pip install --upgrade pip
-              pip install --index-url https://download.pytorch.org/whl/cu124 \
-                torch==2.8.0 torchvision==0.23.0
-              pip install \
-                git+https://github.com/huggingface/diffusers.git \
-                transformers==4.56.1 \
-                einops==0.8.1 \
-                safetensors==0.4.5 \
-                fire==0.7.1 \
-                openai==2.8.1 \
-                huggingface_hub \
-                requests \
-                bitsandbytes
-              touch "$VENV/.deps-installed"
-            fi
-          '';
         in
         f {
-          inherit pkgs cuda python pythonDeps cudaLibs basePackages ldPath envVars setupVenv root;
+          inherit pkgs cuda python pythonEnv cudaLibs basePackages ldPath envVars root;
         });
     in
     {
-      devShells = forAllSystems ({ pkgs, basePackages, envVars, setupVenv, ... }:
+      devShells = forAllSystems ({ pkgs, basePackages, envVars, ... }:
         pkgs.mkShell {
-          # CUDA libraries pulled from nix store; python deps installed via venv/pip in shellHook.
+          # CUDA libraries pulled from nix store; python deps provided via pythonEnv.
           packages = basePackages;
           env = envVars;
           shellHook = ''
-            ${setupVenv}
             echo "CUDA_HOME=$CUDA_HOME"
-            echo "Activate env with: source $VENV/bin/activate"
             echo "Example entry point: python run_flux2_4bit.py"
           '';
         });
 
-      apps = forAllSystems ({ pkgs, basePackages, envVars, setupVenv, ldPath, root, ... }:
+      apps = forAllSystems ({ pkgs, basePackages, envVars, ldPath, root, ... }:
         let
           runner = pkgs.writeShellApplication {
             name = "flux2-4bit";
@@ -109,8 +81,6 @@
               export LD_LIBRARY_PATH=${ldPath}
               export PYTORCH_CUDA_ALLOC_CONF=${envVars.PYTORCH_CUDA_ALLOC_CONF}
               export HF_HUB_ENABLE_HF_TRANSFER=${envVars.HF_HUB_ENABLE_HF_TRANSFER}
-
-              ${setupVenv}
 
               python run_flux2_4bit.py "$@"
             '';
