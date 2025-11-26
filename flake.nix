@@ -53,7 +53,7 @@
           };
         in
         f {
-          inherit pkgs cuda python pythonEnv cudaLibs basePackages ldPath envVars root;
+          inherit pkgs cuda python pythonEnv cudaLibs basePackages ldPath envVars root system;
         });
     in
     {
@@ -68,7 +68,7 @@
           '';
         });
 
-      apps = forAllSystems ({ pkgs, basePackages, envVars, ldPath, root, ... }:
+      packages = forAllSystems ({ pkgs, basePackages, envVars, ldPath, root, ... }:
         let
           runner = pkgs.writeShellApplication {
             name = "flux2-4bit";
@@ -85,6 +85,15 @@
               python run_flux2_4bit.py "$@"
             '';
           };
+        in
+        {
+          default = runner;
+          flux2-4bit = runner;
+        });
+
+      apps = forAllSystems ({ system, ... }:
+        let
+          runner = self.packages.${system}.flux2-4bit;
           defaultApp = {
             type = "app";
             program = "${runner}/bin/flux2-4bit";
