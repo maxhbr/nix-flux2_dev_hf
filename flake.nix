@@ -50,7 +50,7 @@
               python -m venv "$VENV"
             fi
 
-            # shellcheck disable=SC1090
+            # shellcheck disable=SC1090,SC1091
             source "$VENV/bin/activate"
 
             # Install python deps once. Torch/torchvision pulled from official CUDA wheels.
