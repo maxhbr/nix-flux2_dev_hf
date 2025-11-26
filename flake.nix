@@ -17,7 +17,7 @@
           python = pkgs.python311;
           pythonEnv = python.withPackages (ps: with ps; [
             # CUDA-enabled PyTorch wheels and friends
-            pytorch-bin
+            torch-bin
             torchvision-bin
             einops
             transformers
