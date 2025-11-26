@@ -44,7 +44,12 @@
             HF_HUB_ENABLE_HF_TRANSFER = "1";
           };
           setupVenv = ''
-            VENV=".venv"
+            if [ -w . ]; then
+              VENV="${FLUX2_VENV:-.venv}"
+            else
+              VENV="${FLUX2_VENV:-$HOME/.cache/flux2-venv}"
+            fi
+            mkdir -p "$(dirname "$VENV")"
             if [ ! -d "$VENV" ]; then
               echo "Creating python venv in $VENV"
               python -m venv "$VENV"
