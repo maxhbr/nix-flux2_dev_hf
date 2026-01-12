@@ -11,7 +11,7 @@ if [[ "${1:-}" == "--wrap" ]]; then
         mem_avail_bytes="$(free -b | awk '/^Mem:/ {print $7}')"
         mem_limit_bytes=$((mem_avail_bytes * 80 / 100))
         echo "#### Launching build in systemd scope (MemoryMax=${mem_limit_bytes} bytes) ####"
-        exec systemd-run --user --scope --pty -p "MemoryMax=${mem_limit_bytes}" \
+        exec systemd-run --user --scope -p "MemoryMax=${mem_limit_bytes}" \
             env SYSTEMD_RUN=1 bash "$0"
     fi
 fi
