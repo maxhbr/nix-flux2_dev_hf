@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-log="build.sh.log"
+log="build.sh.$(date +%Y%m%d%H%M%S).log"
 exec > >(tee -a "$log") 2>&1
 echo "#### Starting build at $(date) ####"
 
