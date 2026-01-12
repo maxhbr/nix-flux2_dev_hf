@@ -14,7 +14,29 @@
             config.allowUnfree = true;
           };
           cuda = pkgs.cudaPackages;
-          python = pkgs.python311;
+          python = pkgs.python311.override {
+            packageOverrides = final: prev:
+              let
+                dropFaker = inputs: pkgs.lib.filter (dep: dep != prev.faker) (inputs or []);
+                stripFaker = pkg: pkg.overridePythonAttrs (old: {
+                  doCheck = false;
+                  propagatedBuildInputs = dropFaker (old.propagatedBuildInputs or []);
+                  checkInputs = dropFaker (old.checkInputs or []);
+                  nativeCheckInputs = dropFaker (old.nativeCheckInputs or []);
+                });
+              in
+              {
+                transformers = stripFaker prev.transformers;
+                diffusers = stripFaker prev.diffusers;
+                bitsandbytes = stripFaker prev.bitsandbytes;
+                openai = stripFaker prev.openai;
+                huggingface-hub = stripFaker prev.huggingface-hub;
+                fire = stripFaker prev.fire;
+                einops = stripFaker prev.einops;
+                safetensors = stripFaker prev.safetensors;
+                requests = stripFaker prev.requests;
+              };
+          };
           pythonEnv = python.withPackages (ps: with ps; [
             # CUDA-enabled PyTorch wheels and friends
             torch-bin
