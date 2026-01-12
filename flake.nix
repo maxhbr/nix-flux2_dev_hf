@@ -17,7 +17,7 @@
           python = pkgs.python311.override {
             packageOverrides = final: prev:
               let
-                dropFaker = inputs: pkgs.lib.filter (dep: dep != prev.faker) (inputs or []);
+                dropFaker = inputs: pkgs.lib.filter (dep: dep != prev.faker) inputs;
                 stripFaker = pkg: pkg.overridePythonAttrs (old: {
                   doCheck = false;
                   propagatedBuildInputs = dropFaker (old.propagatedBuildInputs or []);
