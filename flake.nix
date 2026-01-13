@@ -14,7 +14,7 @@
             config.allowUnfree = true;
           };
           cuda = pkgs.cudaPackages;
-          python = pkgs.python311.override {
+          python = pkgs.python312.override {
             packageOverrides = final: prev:
               let
                 dropFaker = inputs: pkgs.lib.filter (dep: dep != prev.faker) inputs;
