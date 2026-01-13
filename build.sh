@@ -18,4 +18,9 @@ if [[ "${1:-}" == "--wrap" ]]; then
     fi
 fi
 
-nix build  --no-checks  --log-format raw .#
+if [[ "$(hostname)" != "f13" ]]; then
+    echo "#### Pulling latest changes from git ####"
+    git pull
+fi
+
+nix build --log-format raw .#
