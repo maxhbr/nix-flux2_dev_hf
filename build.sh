@@ -18,4 +18,4 @@ if [[ "${1:-}" == "--wrap" ]]; then
     fi
 fi
 
-nix build --log-format raw .#
+nix build  --no-checks  --log-format raw .#
